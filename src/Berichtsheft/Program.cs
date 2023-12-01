@@ -2,6 +2,7 @@ using Berichtsheft.Client.Pages;
 using Berichtsheft.Components;
 using Berichtsheft.Components.Account;
 using Berichtsheft.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,8 +14,64 @@ using System.Runtime.CompilerServices;
 namespace Berichtsheft;
 public static class Program
 {
-    public static void Main(string[] args) =>
-        BuildApp(args).Run();
+    public static async Task Main(string[] args)
+    {
+        var app = BuildApp(args);
+
+        await addTestUser(app, "azubi1@softwareschmiede.com", "Azubi");
+        await addTestUser(app, "azubi2@softwareschmiede.com", "Azubi");
+        await addTestUser(app, "ausbilder1@softwareschmiede.com", "Ausbilder");
+        await addTestUser(app, "ausbidler2@softwareschmiede.com", "Ausbilder");
+
+        app.Run();
+    }
+
+    public static async Task addTestUser(WebApplication app, string userName, string userRole)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var roleManager = scope.ServiceProvider.GetRequiredService <RoleManager<IdentityRole>>();
+            if(roleManager.FindByNameAsync("Azubi").Result == null)
+            {
+                await roleManager.CreateAsync(new IdentityRole("Azubi"));
+            }
+
+            if (roleManager.FindByNameAsync("Ausbilder").Result == null)
+            {
+                await roleManager.CreateAsync(new IdentityRole("Ausbilder"));
+            }
+
+            var manager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+
+            var delUser = await manager.FindByNameAsync(userName);
+            if (delUser != null)
+            {
+                await manager.DeleteAsync(delUser);
+            }
+
+            // Standarduser anlegen wenn noch nicht vohanden
+            var user = await manager.FindByNameAsync(userName);
+            if (user == null)
+            {
+                var x = await manager.CreateAsync(new ApplicationUser
+                {
+                    UserName = userName,
+                    Email = userName
+                });
+                // User nochmal holen da er jetzt existieren sollte
+                var user2 = await manager.FindByNameAsync(userName);
+
+                // Passwort setzen
+                await manager.AddPasswordAsync(user2, "Test12!");
+                await manager.AddToRoleAsync(user2, userRole);
+
+                await manager.UpdateAsync(user2);
+            }
+
+        }
+
+    }
 
     internal static WebApplication BuildApp(string[] args)
     {
@@ -37,17 +94,25 @@ public static class Program
             })
             .AddIdentityCookies();
 
+        builder.Services.AddAuthorization(x =>
+        {
+            x.AddPolicy("Azubi", policy => policy.RequireRole("Azubi"));
+            x.AddPolicy("Ausbilder", policy => policy.RequireRole("Ausbilder"));
+        });
+
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-        builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+        builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders();
 
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
 
         var app = builder.Build();
 
@@ -68,6 +133,8 @@ public static class Program
 
         app.UseStaticFiles();
         app.UseAntiforgery();
+
+        app.MapGroup("/account").MapIdentityApi<ApplicationUser>();
 
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode()

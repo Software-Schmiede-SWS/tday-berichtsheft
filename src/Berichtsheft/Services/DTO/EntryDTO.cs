@@ -1,4 +1,4 @@
 
 namespace Services.DTO;
 
-public readonly record struct EntryDTO(string ID, string Content, EState State);
+public readonly record struct EntryDTO(string ID, string Content, EState State, DateOnly CreationDate);

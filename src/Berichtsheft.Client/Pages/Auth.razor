@@ -2,7 +2,8 @@
 
 @using Microsoft.AspNetCore.Authorization
 
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Ausbilder")]
+
 @rendermode InteractiveAuto
 
 <PageTitle>Auth</PageTitle>

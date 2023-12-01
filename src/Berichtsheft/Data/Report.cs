@@ -1,9 +1,12 @@
-﻿namespace Berichtsheft.Data;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Berichtsheft.Data;
 
 public class Report
 {
-    public string ID { get; set; }
-    public ApplicationUser Creator { get; set; }
-    public IList<Entry> Entries { get; set; }
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid ID { get; set; }
+    public ApplicationUser Creator { get; set; } = null!;
+    public IList<Entry>? Entries { get; set; }
     public EReportState State { get; set; }
 }

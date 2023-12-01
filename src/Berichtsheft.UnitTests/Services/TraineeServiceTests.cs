@@ -1,4 +1,5 @@
 ﻿using Berichtsheft.Data;
+using Services;
 using Services.DTO;
 using System;
 using System.Collections.Generic;
@@ -14,24 +15,48 @@ internal class TraineeServiceTests
     [TestMethod]
     public void TestGetAllEntries()
     {
-        Mock<IReportRepository> repoMock = new();
-        repoMock.Setup(x => x.GetAll()).Returns(new List<Report>()
+        Mock<ApplicationUser> mockedUser = new();
+        mockedUser.Setup(x => x.Id).Returns("Test");
+        Mock<ApplicationUser> mockedUser2 = new();
+        mockedUser2.Setup(x => x.Id).Returns("Test");
+        Mock<IReportRepository> mockedReport = new();
+        mockedReport.Setup(x => x.GetAll()).Returns(new List<Report>()
         {
-            new Report()
+            new()
             {
-                ID = "1",
-                KW = 1,
-                State = EState.NotSubmitted.,
+                ID = new(),
+                Creator = mockedUser.Object,
+                Instructor = null,
                 Entries = new List<Entry>()
                 {
-                    new Entry()
+                    new()
                     {
-                        ID = "1",
-                        Content = "Test",
-                        ReportID = "1"
+                        ID = new(),
+                        Text = "Test",
+                        State = EReportState.Open
+                    }
+                }
+            },
+            new()
+            {
+                ID = new(),
+                Creator = mockedUser2.Object,
+                Instructor = null,
+                Entries = new List<Entry>()
+                {
+                    new()
+                    {
+                        ID = new(),
+                        Text = "Test2",
+                        State = EReportState.Open
                     }
                 }
             }
         });
+
+        EntryDTO[] resultsEntries = new TraineeService(mockedReport.Object).GetAllEntries();
+
+        resultsEntries.Should().HaveCount(1);
+        resultsEntries.Should().AllSatisfy(entry => entry.Content.Should().Be("Test"));
     }
 }

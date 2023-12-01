@@ -8,5 +8,5 @@ public class Report
     public Guid ID { get; set; }
     public ApplicationUser Creator { get; set; } = null!;
     public IList<Entry>? Entries { get; set; }
-    public EReportState State { get; set; }
+    public ApplicationUser Instructor { get; set; } = null!;
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Berichtsheft.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231201135955_CreateModel")]
-    partial class CreateModel
+    [Migration("20231201144204_DataModel")]
+    partial class DataModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -92,11 +92,12 @@ namespace Berichtsheft.Migrations
 
             modelBuilder.Entity("Berichtsheft.Data.Entry", b =>
                 {
-                    b.Property<string>("ID")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ReportID")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid?>("ReportID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -111,8 +112,9 @@ namespace Berichtsheft.Migrations
 
             modelBuilder.Entity("Berichtsheft.Data.Report", b =>
                 {
-                    b.Property<string>("ID")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CreatorId")
                         .HasColumnType("nvarchar(450)");

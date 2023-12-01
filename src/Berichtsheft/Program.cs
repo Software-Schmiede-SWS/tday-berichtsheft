@@ -49,7 +49,7 @@ public static class Program
 
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
-        builder.Services.AddSingleton<IReportRepository, ReportRepository>();
+        builder.Services.AddScoped<IReportRepository, ReportRepository>();
 
         var app = builder.Build();
 
